@@ -16,7 +16,7 @@ import { __liveUpdatesTestUtils } from "./LiveUpdatesProvider";
 import { queryKeys } from "../lib/queryKeys";
 
 describe("LiveUpdatesProvider issue invalidation", () => {
-  it.each(["issue.thread_interaction_accepted", "issue.thread_interaction_answered", "decision.decided", "issue.conversation_session_started", "inbox.dismissed", "inbox.snoozed", "inbox.restored"])("refreshes canonical attention, history and source-chat projections after %s", action => {
+  it.each(["issue.thread_interaction_accepted", "issue.thread_interaction_answered", "decision.decided", "decision.effect_succeeded", "decision.effect_failed", "issue.conversation_session_started", "inbox.dismissed", "inbox.snoozed", "inbox.restored"])("refreshes canonical attention, history and source-chat projections after %s", action => {
     const client = new QueryClient();
     const invalidate = vi.spyOn(client, "invalidateQueries");
     __liveUpdatesTestUtils.invalidateActivityQueries(client, "company-1", {
@@ -32,6 +32,8 @@ describe("LiveUpdatesProvider issue invalidation", () => {
     const receiptKey = ["issues", "decision-receipts", "chat-1", "user-1"];
     const historyKey = [...queryKeys.attention("company-1"), "history"];
     const questionKey = ["issues", "pending-questions", "chat-1", "user-1"];
+    const taskRecordKey = queryKeys.decisions.taskRecord("company-1", "task-1", "user-1", "decision-1");
+    client.setQueryData(taskRecordKey, { title: "Private decision" });
     client.setQueryData(questionKey, [{ title: "Private question" }]);
     client.setQueryData(receiptKey, { items: [{ title: "Private decision" }] });
     client.setQueryData(historyKey, { items: [{ title: "Private decision" }] });
@@ -41,6 +43,7 @@ describe("LiveUpdatesProvider issue invalidation", () => {
     expect(client.getQueryData(receiptKey)).toBeUndefined();
     expect(client.getQueryData(historyKey)).toBeUndefined();
     expect(client.getQueryData(questionKey)).toBeUndefined();
+    expect(client.getQueryData(taskRecordKey)).toBeUndefined();
     client.clear();
   });
   it("refreshes saved project access with permission saves and live agent activity", async () => {

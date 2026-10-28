@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Agent } from "@paperclipai/shared";
 import { decisionsApi } from "@/api/decisions";
 import { useLocation } from "@/lib/router";
+import { queryKeys } from "@/lib/queryKeys";
 import { taskChatHashAnchor } from "./task-chat/scroll-navigation";
 import { DecisionResolver } from "./DecisionResolver";
 import { Button } from "./ui/button";
@@ -14,7 +15,7 @@ export function TaskDecisionRecord({ companyId, issueId, viewerId, agentMap }: {
   const anchor = taskChatHashAnchor(hash);
   const decisionId = anchor?.startsWith("decision-") ? anchor.slice("decision-".length) : null;
   const record = useQuery({
-    queryKey: ["decisions", "task-record", companyId, issueId, viewerId, decisionId],
+    queryKey: queryKeys.decisions.taskRecord(companyId, issueId, viewerId, decisionId),
     queryFn: () => decisionsApi.get(decisionId!), enabled: !!decisionId, retry: false,
   });
   if (!decisionId) return null;

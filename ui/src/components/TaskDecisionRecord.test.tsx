@@ -65,3 +65,14 @@ it("does not expose cached record text after a viewer change loses access", asyn
   await vi.waitFor(() => expect(host.textContent).toContain("Could not load this decision"));
   expect(host.textContent).not.toContain("The draft is ready");
 });
+it("refreshes the mounted record after company decision events invalidate its results", async () => {
+  mocks.get.mockResolvedValue({ ...decision, executions: [] });
+  await mount("#decision-decision-1");
+  await vi.waitFor(() => expect(host.textContent).toContain("The draft is ready"));
+  expect(host.textContent).not.toContain("Blog draft queued");
+  mocks.get.mockResolvedValue(decision);
+  await act(async () => { await client.invalidateQueries({ queryKey: ["decisions", "company"] }); });
+  await vi.waitFor(() => expect(host.textContent).toContain("Blog draft queued"));
+  expect(mocks.get).toHaveBeenCalledTimes(2);
+  expect(mocks.resolver).toHaveBeenLastCalledWith(expect.objectContaining({ recordedDecision: decision }));
+});
